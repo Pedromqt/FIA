@@ -62,7 +62,7 @@ ED - limiar Distância
 Sistema de Produções:
 1. SB -> NIL
 2. DB <= ED -> P 
-3. DL <= ED, abs(0B) > E0 -> R         // estou na linha
-4. DL <= ED, abs(0B) <= E0 -> M        // estou na linha 
+3. DL <= ED, abs(0B) > E0 -> R         // estou na linha e nao orientado
+4. DL <= ED, abs(0B) <= E0 -> M        // estou na linha e orientado
 5. abs(0L) > E0 -> R                   // fora da linha e não orientado
 6. abs(0L) <= E0 -> M                  // fora da linha e orientado
