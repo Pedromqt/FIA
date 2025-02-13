@@ -52,3 +52,13 @@ PPB - Posicionado na linha que cruza perpendicularmente a barra
 VPB - Voltado para a linha que cruza perpendicularmente a barra
 
 Ações:
+PB - Pegar na barra
+CR - Caminhar em linha reta
+R - Rodar
+
+Sistema de Produções:
+AB -> PB
+PPB,VPB -> CR
+PPB, ~VPB -> Rodar até estar VPB
+~PPB, VPB -> Rodar -90 graus, CR
+~PPB,~VPB -> Rodar até estar VPB
