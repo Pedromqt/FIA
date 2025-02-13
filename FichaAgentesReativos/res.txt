@@ -30,10 +30,9 @@ D - rodar direita
 E - rodar esquerda 
 
 Memória:
-
-
+M=[E]
 
 Sistema de Produções:
-~O -> A
-O, E(O) < Agente -> C(O)
-O, E(O) > Agente -> D
+~O -> A, M-=1
+O, E(O) < E(A) -> C(O),M+=E(O)
+O, E(O) > E(A) -> D, M-=1
