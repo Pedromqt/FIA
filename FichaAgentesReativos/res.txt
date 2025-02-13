@@ -1,4 +1,17 @@
-~p4 -> E,E,A
-~p1 -> D,A
-~p2 -> D,A
-~p3 -> D,A
+Perceções:
+O -  Há obstáculo
+
+Ações:
+A 
+D - rodar direita 
+E - rodar esquerda
+
+Memória:
+M = [A]
+M = [D]
+M = [E]
+
+Sistema de Produçõe:
+~O -> A , M=[A]
+O,M[A] -> D,M=[D]
+O,M[D] -> D
