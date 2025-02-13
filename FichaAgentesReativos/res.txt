@@ -41,3 +41,29 @@ Sistema de Produções:
 O, Ep > Ea -> AC, Ae
 O, Ep <= Ea -> D, De
 Ep <= 0 -> NIL
+
+11.
+
+Percecoes:
+
+B - Ter a barra
+DB - Estar voltado para a barra
+PB - Poder apanhar a barra
+V - Estar voltado para a linha
+R - Estar na reta
+
+Acoes:
+
+R- rodar 1 grau
+A - andar 1 unidade
+P - pegar
+
+Memorial:
+
+Sistema de Produções:
+
+~V -> R
+~R -> A
+R, ~DB -> R
+~PB -> A
+~B -> P
