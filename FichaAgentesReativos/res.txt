@@ -55,7 +55,6 @@ P - Pegar na Barra
 M - Mover em linha reta
 R - Rodar com velocidade constante
 
-
 E0 - limiar orientação
 ED - limiar Distância
 
