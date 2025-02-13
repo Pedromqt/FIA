@@ -42,7 +42,6 @@ O, Ep <= Ea -> D, De
 Ep <= 0 -> NIL
 
 11.
-
 Perceções:
 SB - Segurar Barra
 0B - Ângulo relativo à barra
@@ -54,7 +53,6 @@ Ações:
 P - Pegar na Barra
 M - Mover em linha reta
 R - Rodar com velocidade constante
-
 
 E0 - limiar orientação
 ED - limiar Distância
