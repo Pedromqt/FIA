@@ -3,7 +3,7 @@ Perceções:
 O -  Há obstáculo
 
 Ações:
-A 
+A - avançar
 D - rodar direita 
 E - rodar esquerda
 
@@ -12,7 +12,28 @@ M = [A]
 M = [D]
 M = [E]
 
-Sistema de Produçõe:
+Sistema de Produções:
 ~O -> A , M=[A]
 O,M[A] -> D,M=[D]
 O,M[D] -> D
+
+
+
+5. 
+Perceções:
+O - Há outro agente/obstáculo
+
+Ações:
+C - Comer agente
+A - Avançar
+D - rodar direita
+E - rodar esquerda 
+
+Memória:
+
+
+
+Sistema de Produções:
+~O -> A
+O, E(O) < Agente -> C(O)
+O, E(O) > Agente -> D
