@@ -33,6 +33,6 @@ Memória:
 M=[E]
 
 Sistema de Produções:
-~O -> A, M-=1
-O, E(O) < E(A) -> A,C(O),M+=E(O)
-O, E(O) > E(A) -> D, M-=1
+~O -> A, M[E]-=1
+O, E(O) < E(A) -> A,C(O),M[E]+=E(O)
+O, E(O) > E(A) -> D, M[E]-=1
