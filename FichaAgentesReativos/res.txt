@@ -22,17 +22,22 @@ O,M[D] -> D
 5. 
 Perceções:
 O - Há outro agente/obstáculo
+Ep - Energia Própria
+Ea - Energia Adversária
 
 Ações:
-C - Comer agente
+AC - Avançar e comer agente
 A - Avançar
 D - rodar direita
 E - rodar esquerda 
+Ae - aumentar Energia
+De - diminuir Energia
 
 Memória:
 M=[E]
 
 Sistema de Produções:
-~O -> A, M[E]-=1
-O, E(O) < E(A) -> A,C(O), M[E]+=E(O)
-O, E(O) > E(A) -> D, M[E]-=1
+~O -> A, De
+O, Ep > Ea -> AC, Ae
+O, Ep <= Ea -> D, De
+Ep <= 0 -> NIL
