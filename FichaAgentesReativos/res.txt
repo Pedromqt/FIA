@@ -60,5 +60,5 @@ Sistema de Produções:
 AB -> PB
 PPB,VPB -> CR
 PPB, ~VPB -> Rodar até estar VPB
-~PPB, VPB -> Rodar -90 graus, CR
+~PPB, VPB -> Rodar -90 graus, CR até PPB, Rodar 90 graus
 ~PPB,~VPB -> Rodar até estar VPB
