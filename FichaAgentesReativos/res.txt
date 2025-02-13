@@ -35,7 +35,6 @@ De - diminuir Energia
 
 Memória:
 
-
 Sistema de Produções:
 ~O -> A, De
 O, Ep > Ea -> AC, Ae
