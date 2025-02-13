@@ -1,0 +1,64 @@
+1.
+Perceções:
+O -  Há obstáculo
+
+Ações:
+A - avançar
+D - rodar direita 
+E - rodar esquerda
+
+Memória:
+M = [A]
+M = [D]
+M = [E]
+
+Sistema de Produções:
+~O -> A , M=[A]
+O,M[A] -> D,M=[D]
+O,M[D] -> D
+
+
+
+5. 
+Perceções:
+O - Há outro agente/obstáculo
+Ep - Energia Própria
+Ea - Energia Adversária
+
+Ações:
+AC - Avançar e comer agente
+A - Avançar
+D - rodar direita
+E - rodar esquerda 
+Ae - aumentar Energia
+De - diminuir Energia
+
+Memória:
+
+Sistema de Produções:
+~O -> A, De
+O, Ep > Ea -> AC, Ae
+O, Ep <= Ea -> D, De
+Ep <= 0 -> NIL
+
+
+
+11. 
+Perceções:
+SB - Segurar Barra
+A - Angulo do bicho
+AB - Posição que lhe permite apanhar a Barra
+PPB - Posicionado na linha que cruza perpendicularmente a barra 
+VPB - Voltado para a linha que cruza perpendicularmente a barra
+
+Ações:
+PB - Pegar na barra
+CR - Caminhar em linha reta
+R - Rodar
+
+Sistema de Produções:
+AB -> PB
+PPB,VPB -> CR
+PPB, ~VPB -> R até estar VPB
+~PPB, VPB -> R -90 graus, CR até PPB, Rodar 90 graus
+~PPB,~VPB -> R até estar VPB
