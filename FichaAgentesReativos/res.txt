@@ -35,9 +35,20 @@ De - diminuir Energia
 
 Memória:
 
-
 Sistema de Produções:
 ~O -> A, De
 O, Ep > Ea -> AC, Ae
 O, Ep <= Ea -> D, De
 Ep <= 0 -> NIL
+
+
+
+11. 
+Perceções:
+SB - Segurar Barra
+A - Angulo do bicho
+AB - Posição que lhe permite apanhar a Barra
+PPB - Posicionado na linha que cruza perpendicularmente a barra 
+VPB - Voltado para a linha que cruza perpendicularmente a barra
+
+Ações:
