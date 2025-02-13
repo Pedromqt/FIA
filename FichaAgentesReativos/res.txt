@@ -34,7 +34,7 @@ Ae - aumentar Energia
 De - diminuir Energia
 
 Memória:
-M=[E]
+
 
 Sistema de Produções:
 ~O -> A, De
