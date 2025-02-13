@@ -43,26 +43,26 @@ Ep <= 0 -> NIL
 
 11.
 
-Percecoes:
+Perceções:
+SB - Segurar Barra
+0B - Ângulo relativo à barra
+DB - Distância da barra
+DL - Distância ao ponto mais próximo da linha
+0L - Ângulo relativo à linha
 
-B - Ter a barra
-DB - Estar voltado para a barra
-PB - Poder apanhar a barra
-V - Estar voltado para a linha
-R - Estar na reta
+Ações:
+P - Pegar na Barra
+M - Mover em linha reta
+R - Rodar com velocidade constante
 
-Acoes:
 
-R- rodar 1 grau
-A - andar 1 unidade
-P - pegar
-
-Memorial:
+E0 - limiar orientação
+ED - limiar Distância
 
 Sistema de Produções:
-
-~V -> R
-~R -> A
-R, ~DB -> R
-~PB -> A
-~B -> P
+1. SB -> NIL
+2. DB <= ED -> P 
+3. DL <= ED, abs(0B) > E0 -> R         // estou na linha
+4. DL <= ED, abs(0B) <= E0 -> M        // estou na linha 
+5. abs(0L) > E0 -> R                   // fora da linha e não orientado
+6. abs(0L) <= E0 -> M                  // fora da linha e orientado
