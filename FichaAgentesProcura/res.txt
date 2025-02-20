@@ -30,7 +30,7 @@ Caminho: [S,A,E,G1] = nós visitados
 -------------------------------------------------------""--------------------------------------------------------------------------------------
 
 24.
-
+Não usamos a ordem alfabética
 a) [A] -> [B,C] -> [B,C',F,G] -> [B,C',F] -> SAI F (estado objetivo)
 Nós visitados: [A,C,G,F]
 Caminho:[A,C,F]
