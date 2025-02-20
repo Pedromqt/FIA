@@ -41,26 +41,24 @@ O, Ep > Ea -> AC, Ae
 O, Ep <= Ea -> D, De
 Ep <= 0 -> NIL
 
-11.
+
+
+11. 
 Perceções:
 SB - Segurar Barra
-0B - Ângulo relativo à barra
-DB - Distância da barra
-DL - Distância ao ponto mais próximo da linha
-0L - Ângulo relativo à linha
+A - Angulo do bicho
+AB - Posição que lhe permite apanhar a Barra
+PPB - Posicionado na linha que cruza perpendicularmente a barra 
+VPB - Voltado para a linha que cruza perpendicularmente a barra
 
 Ações:
-P - Pegar na Barra
-M - Mover em linha reta
-R - Rodar com velocidade constante
-
-E0 - limiar orientação
-ED - limiar Distância
+PB - Pegar na barra
+CR - Caminhar em linha reta
+R - Rodar
 
 Sistema de Produções:
-1. SB -> NIL
-2. DB <= ED -> P 
-3. DL <= ED, abs(0B) > E0 -> R         // estou na linha e nao orientado
-4. DL <= ED, abs(0B) <= E0 -> M        // estou na linha e orientado
-5. abs(0L) > E0 -> R                   // fora da linha e não orientado
-6. abs(0L) <= E0 -> M                  // fora da linha e orientado
+AB -> PB
+PPB,VPB -> CR
+PPB, ~VPB -> R até estar VPB
+~PPB, VPB -> R -90 graus, CR até PPB, Rodar 90 graus
+~PPB,~VPB -> R até estar VPB
