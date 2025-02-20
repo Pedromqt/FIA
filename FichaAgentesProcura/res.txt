@@ -1,0 +1,34 @@
+8.
+
+a) [S] -> [A,C] -> [C,B,E] -> [B,E,D,G2] -> [E,D,G2,C',D',S',G1] -> [D,G2,C',D',S',G1,G1',G2'] -> [G2,C',D',S',G1,G1',G2',G1'',G2''] -> SAI G2 (estado objetivo) 
+nós visitados: [S,A,C,B,E,D,G2]
+Caminho: [S,C,G2]
+Lês o primeiro da pilha e adicionas no fim
+
+b) [S] -> [A,C] -> [A,D,G2] -> SAI G2 (estado objetivo)
+Caminho: [S,C,G2] igual a nós visitados
+Lês o ultimo da pilha e adicionas no fim
+
+c) [S] -> [A] -> [B] -> [G1] -> SAI G1 (estado objetivo)
+Caminho: [S,A,B,G1] igual a nós visitados
+Vês o custo do próximo nó (segues o mais barato) h(n)
+
+d) [S] -> [A] -> [B] -> [D] -> [G2] -> SAI G2 (estado objetivo)
+Caminho: [S,A,B,D,G2] igual a nós visitados
+Vês o (custo do próximo nó + custo para ir para esse nó) e vais para o mais barato g(n) + h(n)
+
+-------------------------------------------------------""--------------------------------------------------------------------------------------
+
+9.
+
+a) [S] -> [C,B,A] -> [G3,B,A] -> SAI G3 (estado objetivo)
+Caminho: [S,C,G3] = nós visitados
+OU
+[S] -> [A,B,C] -> [E,G1,B,C] -> [G1',G1,B,C] -> SAI G1 (estado objetivo)
+Caminho: [S,A,E,G1] = nós visitados
+
+24.
+
+a) [A] -> [B,C] -> [B,C',F,G] -> [B,C',F] -> SAI F (estado objetivo)
+Nós visitados: [A,C,G,F]
+Caminho:[A,C,F]
