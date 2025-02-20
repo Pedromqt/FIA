@@ -34,3 +34,7 @@ Caminho: [S,A,E,G1] = nós visitados
 a) [A] -> [B,C] -> [B,C',F,G] -> [B,C',F] -> SAI F (estado objetivo)
 Nós visitados: [A,C,G,F]
 Caminho:[A,C,F]
+OU
+[A] -> [B,C] -> [D,E,C] -> [E,C] -> [C] -> [F,G] -> SAI F (estado objetivo)
+Nós visitados: [A,B,D,E,C,F]
+Caminho:[A,C,F]
