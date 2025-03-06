@@ -69,23 +69,22 @@ def rotate_right(power=0.5):
 def reactive_agent(observation):
     perceptions = get_perceptions(observation)
     action = np.array([0, 0], dtype=np.float64)
-    while(1):
-        if perceptions["vertical_speed"] < -0.2:
-            action[0] = 1.0
-        elif perceptions["vertical_speed"] < -0.1:
-            action[0] = 0.3
-        
-        if perceptions["horizontal_position"] > 0.2:
-            action += rotate_left(0.1)
-        elif perceptions["horizontal_position"] < -0.2:
-            action += rotate_right(0.1)
-        
-        if abs(perceptions["angle"]) > np.deg2rad(5):
-            if perceptions["angle"] > 0:
-                action += rotate_left(0.5)
-            else:
-                action += rotate_right(0.5)
-        return np.clip(action, -1, 1)
+    if perceptions["vertical_speed"] < -0.2:
+        action[0] = 1.0
+    elif perceptions["vertical_speed"] < -0.1:
+        action[0] = 0.3
+    
+    if perceptions["horizontal_position"] > 0.2:
+        action += rotate_left(0.1)
+    elif perceptions["horizontal_position"] < -0.2:
+        action += rotate_right(0.1)
+    
+    if abs(perceptions["angle"]) > np.deg2rad(5):
+        if perceptions["angle"] > 0:
+            action += rotate_left(0.5)
+        else:
+            action += rotate_right(0.5)
+    return np.clip(action, -1, 1)
 
 def keyboard_agent(observation):
     action = np.array([0, 0], dtype=np.float64)
@@ -105,7 +104,7 @@ def keyboard_agent(observation):
 success = 0.0
 steps = 0.0
 for i in range(EPISODES):
-    st, su = simulate(steps=1000000, policy=reactive_agent)
+    st, su = simulate(steps=1000000, policy=keyboard_agent)
     if su:
         steps += st
     success += su
