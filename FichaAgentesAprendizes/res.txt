@@ -13,5 +13,64 @@ I(2,1) = -2/3 log2(2/3) - 1/3 log2(1/3) = 0.92
 
 E(Vermelho) = 3/6 * 0.92 = 0.46
 
+S_Verde = [0+,2-]
+
+I(0,2) = 0 - 1 log2(1) = 0
+
+E(Verde) = 0
+
+S_azul = [1+,0-]
+
+I(1,0) = 0
+
+E(Azul) = 0
+
+E(Cor) = 0.46
+
+G(Forma) = I(3,3) - E(Forma) = 0
+
+E(Forma) = E(Quadrado) + E(circulo)
+
+S_quadrado = [2+,2-]
+
+I(2,2) = 0.5 log2(0.5) - 0.5 log(0.5) = 1
+
+E(Quadrado) = 4/6 = 2/3
+
+S_circuloo = [1+,1-]
+
+I(1,1) = 0.5 log2(0.5) - 0.5 log(0.5) = 1
+
+E(circulo) = 2/6 = 1/3
+
+E(Forma)= 2/3 + 1/3 = 1
+
+G(Tamanho) = I(3,3) - E(Tamanho)
+
+E(Tamanho) = E(Grande) + E(Pequeno)
+
+S_Grande = [3+,1-]
+
+I(3,1) = -3/4 log2(3/4) - 1/4 log2(1/4) = 0.81
+
+E(Grande) = 0.54
+
+S_pequeno = [0+,2-]
+
+I(0,2) = 0 log2(0) - 1 log(1) = 0
+
+E(Pequeno) = 0
+
+E(Tamanho)=  0.54
+
+G(Tamanho)= I(3,3) - 0.54 = 1 - 0.54 = 0.46
+
+G(Cor) = 0.54
 
 
+                               Cor
+                 /              |                      \
+            Azul ->+              Verde-> -                 Vermelho
+                                                        |       \
+                                                    Grande->+      Pequeno->-
+                           
