@@ -2,12 +2,12 @@ import gymnasium as gym
 import numpy as np
 import pygame
 
-ENABLE_WIND = True
+ENABLE_WIND = False
 WIND_POWER = 15.0
 TURBULENCE_POWER = 0.0
 GRAVITY = -10.0
-#RENDER_MODE = 'human'
-RENDER_MODE = None #seleccione esta opção para não visualizar o ambiente (testes mais rápidos)
+RENDER_MODE = 'human'
+#RENDER_MODE = None #seleccione esta opção para não visualizar o ambiente (testes mais rápidos)
 EPISODES = 1000
 
 env = gym.make("LunarLander-v3", render_mode =RENDER_MODE, 
@@ -55,77 +55,16 @@ def simulate(steps=1000,seed=None, policy = None):
 
 #Perceptions
 ##TODO: Defina as suas perceções aqui
-def perceptions(observation):
-    
-    x = observation[0]
-    y = observation[1]
-    vx = observation[2]
-    vy = observation[3]
-    theta = observation[4]
-    vtheta = observation[5]
-
-    return x, y, vx, vy, theta, vtheta
-
 
 #Actions
 ##TODO: Defina as suas ações aqui
-def calc_action(x, y, vx, vy, theta, vtheta):
-    
-    h_motors = 0 
-    
-    # Motores Horizontais de acordo com a velocidade da nave:
-    if vx > 0.1: 
-        h_motors = -1
-    elif vx < -0.1:
-        h_motors = 1
-        
-        
-    # Motor Vertical de acordo com a velocidade da nave:
-    if vy < -0.08 and y > 0.04:
-        v_motor = 1
-    else: 
-        v_motor = 0
-    
-    # Motores horizontais de acordo com a posição da nave:
-    if (abs(x) >= 0.035) and y > 0.8:  
-        if x > 0.035 and vx > -0.04:  
-            h_motors = -0.8
-        elif x < -0.035 and vx < 0.04:  
-            h_motors = 0.8
-    elif (abs(x) >= 0.035) and y < 0.8:
-        if x > 0.035 and vx > -0.04:  
-            h_motors = -1
-        elif x < -0.035 and vx < 0.04:  
-            h_motors = 1
-            
-    
-    # Motores Horizontais de acordo com o angulo e velocidade de rotação da nave:
-    if theta < -0.25 and y > 0.1:
-        h_motors = -0.9
-    elif theta > 0.25  and y > 0.1:
-        h_motors = 0.9
-
-    if vtheta < -0.25 and y > 0.1:
-        h_motors = -1
-    elif vtheta > 0.25 and y > 0.1:
-        h_motors = 1 
-
-
-    return v_motor, h_motors
-
 
 
 def reactive_agent(observation):
-   
     ##TODO: Implemente aqui o seu agente reativo
     ##Substitua a linha abaixo pela sua implementação
-    
-    x,y,vx,vy,theta,vtheta = perceptions(observation)  
-    v_motor,h_motors = calc_action(x,y,vx,vy,theta,vtheta)
-
-    #action = env.action_space.sample()
-    
-    return [v_motor, h_motors]
+    action = env.action_space.sample()
+    return action 
     
     
 def keyboard_agent(observation):
