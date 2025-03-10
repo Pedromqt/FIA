@@ -75,25 +75,25 @@ def perceptions(observation):
 def actions(x, y, vx, vy, theta, vtheta, left_leg, right_leg):
     
     motor = 0
-    anda = 0 
+    deslc = 0 
 
     # ------ posicao na horizontal --------
     
     if (abs(x) > 0.04) and y > 0.8:  
         if x > 0.04 and vx > -0.04:  
-            anda = -0.8
+            deslc = -0.8
         elif x < -0.04 and vx < 0.04:  
-            anda = 0.8
+            deslc = 0.8
     elif (abs(x) > 0.04) and y <0.8:
         if x > 0.04 and vx > -0.04:  
-            anda = -1
+            deslc = -1
         elif x < -0.04 and vx < 0.04:  
-            anda = 1
+            deslc = 1
     # ------ velocidade lateral --------
     if vx > 0.1: 
-        anda = -1
+        deslc = -1
     elif vx < -0.1:
-        anda = 1
+        deslc = 1
 
     # ------- liga o motor ---------
 
@@ -103,17 +103,17 @@ def actions(x, y, vx, vy, theta, vtheta, left_leg, right_leg):
     # ------ inclinação ------
 
     if theta < -0.25 and y > 0.1:
-        anda = -1
+        deslc = -1
     elif theta > 0.25  and y > 0.1:
-        anda = 1
+        deslc = 1
 
     if vtheta < -0.25 and y > 0.1:
-        anda = -1
+        deslc = -1
     elif vtheta > 0.25 and y > 0.1:
-        anda = 1 
+        deslc = 1 
 
 
-    return [motor, anda]
+    return [motor, deslc]
 
 
 
