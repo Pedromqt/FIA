@@ -87,15 +87,15 @@ def calc_action(x, y, vx, vy, theta, vtheta):
         v_motor = 0
     
     # Motores horizontais de acordo com a posição da nave:
-    if (abs(x) >= 0.035) and y > 0.8:  
-        if x > 0.035 and vx > -0.04:  
+    if (abs(x) > 0.04) and y > 0.8:  
+        if x > 0.4 and vx > -0.04:  
             h_motors = -0.8
-        elif x < -0.035 and vx < 0.04:  
+        elif x < -0.04 and vx < 0.04:  
             h_motors = 0.8
-    elif (abs(x) >= 0.035) and y < 0.8:
-        if x > 0.035 and vx > -0.04:  
+    elif (abs(x) > 0.04) and y < 0.8:
+        if x > 0.04 and vx > -0.04:  
             h_motors = -1
-        elif x < -0.035 and vx < 0.04:  
+        elif x < -0.04 and vx < 0.04:  
             h_motors = 1
             
     
