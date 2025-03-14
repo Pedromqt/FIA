@@ -2,8 +2,8 @@ import gymnasium as gym
 import numpy as np
 import pygame
 
-ENABLE_WIND = False
-WIND_POWER = 20.0
+ENABLE_WIND = True
+WIND_POWER = 15.0
 TURBULENCE_POWER = 0.0
 GRAVITY = -10.0
 #RENDER_MODE = 'human'
