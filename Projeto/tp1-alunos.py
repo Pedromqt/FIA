@@ -3,11 +3,11 @@ import numpy as np
 import pygame
 
 ENABLE_WIND = True
-WIND_POWER = 10.0
+WIND_POWER = 20.0
 TURBULENCE_POWER = 0.0
 GRAVITY = -10.0
-#RENDER_MODE = 'human'
-RENDER_MODE = None #seleccione esta opção para não visualizar o ambiente (testes mais rápidos)
+RENDER_MODE = 'human'
+#RENDER_MODE = None #seleccione esta opção para não visualizar o ambiente (testes mais rápidos)
 EPISODES = 1000
 
 env = gym.make("LunarLander-v3", render_mode =RENDER_MODE, 
@@ -63,13 +63,16 @@ def perceptions(observation):
     vy = observation[3]
     theta = observation[4]
     vtheta = observation[5]
-
-    return x, y, vx, vy, theta, vtheta
+    left_leg_touching = observation[6]
+    right_leg_touching = observation[7]
+    
+    return x, y, vx, vy, theta, vtheta, left_leg_touching, right_leg_touching
 
 
 #Actions
-def calc_action(x, y, vx, vy, theta, vtheta):
-    h_motors = 0 
+def calc_action(x, y, vx, vy, theta, vtheta, left_leg_touching, right_leg_touching):
+    hm = 0 
+    
     if(ENABLE_WIND):
         anguloLim = 0.28
     else: 
@@ -77,41 +80,42 @@ def calc_action(x, y, vx, vy, theta, vtheta):
         
     # Motores Horizontais de acordo com a velocidade da nave:
     if vx > 0.175:
-        h_motors = -1
+        hm = -1
     elif vx < -0.175:
-        h_motors = 1
+        hm = 1
         
     # Motor Vertical de acordo com a velocidade da nave:
-    if vy < -0.08 and y > 0.055:
-        v_motor = 1
+    if vy < -0.08 and y > 0.015:
+        vm = 1
     else: 
-        v_motor = 0
+        vm = 0
     
     # Motores horizontais de acordo com a posição da nave:
     if y >= 0.91:  
         if x > 0.0305 and vx > -0.04:  
-            h_motors = -0.85
+            hm = -0.85
         elif x < -0.0305 and vx < 0.04:  
-            h_motors = 0.85
+            hm = 0.85
     else:
         if x > 0.0305 and vx > -0.04:  
-            h_motors = -0.95
+            hm = -0.95
         elif x < -0.0305 and vx < 0.04:  
-            h_motors = 0.95
+            hm = 0.95
             
     # Motores Horizontais de acordo com o angulo e velocidade de rotação da nave:
     if theta < -anguloLim and y > 0.1:
-        h_motors = -0.9
+        hm = -0.9
     elif theta > anguloLim  and y > 0.1:
-        h_motors = 0.9
+        hm = 0.9
 
     if vtheta < -anguloLim and y > 0.1:
-        h_motors = -1
+        hm = -1
     elif vtheta > anguloLim and y > 0.1:
-        h_motors = 1 
+        hm = 1 
 
+   
 
-    return v_motor, h_motors
+    return vm, hm
 
 
 
@@ -120,12 +124,12 @@ def reactive_agent(observation):
     ##TODO: Implemente aqui o seu agente reativo
     ##Substitua a linha abaixo pela sua implementação
     
-    x,y,vx,vy,theta,vtheta = perceptions(observation)  
-    v_motor,h_motors = calc_action(x,y,vx,vy,theta,vtheta)
+    x,y,vx,vy,theta,vtheta,left_leg_touching,right_leg_touching = perceptions(observation)  
+    vm,hm = calc_action(x,y,vx,vy,theta,vtheta,left_leg_touching,right_leg_touching)
 
     #action = env.action_space.sample()
     
-    return [v_motor, h_motors]
+    return [vm, hm]
     
     
 def keyboard_agent(observation):
