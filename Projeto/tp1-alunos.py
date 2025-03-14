@@ -2,12 +2,12 @@ import gymnasium as gym
 import numpy as np
 import pygame
 
-ENABLE_WIND = True
+ENABLE_WIND = False
 WIND_POWER = 20.0
 TURBULENCE_POWER = 0.0
 GRAVITY = -10.0
-RENDER_MODE = 'human'
-#RENDER_MODE = None #seleccione esta opção para não visualizar o ambiente (testes mais rápidos)
+#RENDER_MODE = 'human'
+RENDER_MODE = None #seleccione esta opção para não visualizar o ambiente (testes mais rápidos)
 EPISODES = 1000
 
 env = gym.make("LunarLander-v3", render_mode =RENDER_MODE, 
@@ -85,7 +85,7 @@ def calc_action(x, y, vx, vy, theta, vtheta, left_leg_touching, right_leg_touchi
         hm = 1
         
     # Motor Vertical de acordo com a velocidade da nave:
-    if vy < -0.08 and y > 0.015:
+    if vy < -0.08 and y > 0.055:
         vm = 1
     else: 
         vm = 0
