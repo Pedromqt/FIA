@@ -70,23 +70,19 @@ def perceptions(observation):
 
 #Actions
 def calc_action(x, y, vx, vy, theta, vtheta, llt, rlt,ew):
-    hm = 0 
+    hm = 0
     
     if(ew):
         anguloLim = 0.28
-    else: 
+    else:
         anguloLim = 0.2
-    
-    # Caso aterre fora, volta a subir 
-    if llt and rlt and (x < -0.2 or x > 0.2):
-        vm = 1 
         
     # Motores Horizontais de acordo com a velocidade da nave:
     if vx > 0.175:
         hm = -1
     elif vx < -0.175:
         hm = 1
-        
+    
     # Motor Vertical de acordo com a velocidade da nave:
     if vy < -0.08 and y > 0.055:
         vm = 1
@@ -94,11 +90,15 @@ def calc_action(x, y, vx, vy, theta, vtheta, llt, rlt,ew):
         vm = 0
     
     # Motores horizontais de acordo com a posição da nave:
-    if x > 0 and vx > 0:
+    if x > 0 and vx > -0.04:
         hm = -1
-    elif x < 0 and vx < 0:
+    elif x < 0 and vx < 0.04:
         hm = 1
-    
+        
+    #ativa motor vertical caso a nave nao esteja centrada
+    if (y < 0.2 and (x < -0.21 or x > 0.21)):
+        vm = 0.4
+        
     # Motores Horizontais de acordo com o angulo e velocidade de rotação da nave:
     if theta < -anguloLim and y > 0.1:
         hm = -0.9
@@ -108,7 +108,8 @@ def calc_action(x, y, vx, vy, theta, vtheta, llt, rlt,ew):
         hm = -1
     elif vtheta > anguloLim and y > 0.1:
         hm = 1
-    
+
+        
     return vm, hm
 
 
