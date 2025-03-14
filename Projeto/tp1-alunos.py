@@ -62,14 +62,14 @@ def perceptions(observation):
     vy = observation[3]
     theta = observation[4]
     vtheta = observation[5]
-    left_leg_touching = observation[6]
-    right_leg_touching = observation[7]
+    llt = observation[6]
+    rlt = observation[7]
     ew = ENABLE_WIND
-    return x, y, vx, vy, theta, vtheta, left_leg_touching, right_leg_touching, ew
+    return x, y, vx, vy, theta, vtheta, llt, rlt, ew
 
 
 #Actions
-def calc_action(x, y, vx, vy, theta, vtheta, left_leg_touching, right_leg_touching,ew):
+def calc_action(x, y, vx, vy, theta, vtheta, llt, rlt,ew):
     hm = 0 
     
     if(ew):
@@ -78,7 +78,7 @@ def calc_action(x, y, vx, vy, theta, vtheta, left_leg_touching, right_leg_touchi
         anguloLim = 0.2
      
     # Caso aterre fora, volta a subir 
-    if left_leg_touching and right_leg_touching and (x < -0.4 or x > 0.4):
+    if llt and rlt and (x < -0.4 or x > 0.4):
         vm = 1 
         
     # Motores Horizontais de acordo com a velocidade da nave:
@@ -116,8 +116,6 @@ def calc_action(x, y, vx, vy, theta, vtheta, left_leg_touching, right_leg_touchi
     elif vtheta > anguloLim and y > 0.1:
         hm = 1 
 
-   
-
     return vm, hm
 
 
@@ -127,8 +125,8 @@ def reactive_agent(observation):
     ##TODO: Implemente aqui o seu agente reativo
     ##Substitua a linha abaixo pela sua implementação
     
-    x,y,vx,vy,theta,vtheta,left_leg_touching,right_leg_touching,ew = perceptions(observation)  
-    vm,hm = calc_action(x,y,vx,vy,theta,vtheta,left_leg_touching,right_leg_touching,ew)
+    x,y,vx,vy,theta,vtheta,llt,rlt,ew = perceptions(observation)  
+    vm,hm = calc_action(x,y,vx,vy,theta,vtheta,llt,rlt,ew)
 
     #action = env.action_space.sample()
     
