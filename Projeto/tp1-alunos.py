@@ -52,7 +52,6 @@ def simulate(steps=1000,seed=None, policy = None):
     return step, success
 
 
-
 #Perceptions
 ##TODO: Defina as suas perceções aqui
 def perceptions(observation):
@@ -65,15 +64,15 @@ def perceptions(observation):
     vtheta = observation[5]
     left_leg_touching = observation[6]
     right_leg_touching = observation[7]
-    
-    return x, y, vx, vy, theta, vtheta, left_leg_touching, right_leg_touching
+    ew = ENABLE_WIND
+    return x, y, vx, vy, theta, vtheta, left_leg_touching, right_leg_touching, ew
 
 
 #Actions
-def calc_action(x, y, vx, vy, theta, vtheta, left_leg_touching, right_leg_touching):
+def calc_action(x, y, vx, vy, theta, vtheta, left_leg_touching, right_leg_touching,ew):
     hm = 0 
     
-    if(ENABLE_WIND):
+    if(ew):
         anguloLim = 0.28
     else: 
         anguloLim = 0.2
@@ -128,8 +127,8 @@ def reactive_agent(observation):
     ##TODO: Implemente aqui o seu agente reativo
     ##Substitua a linha abaixo pela sua implementação
     
-    x,y,vx,vy,theta,vtheta,left_leg_touching,right_leg_touching = perceptions(observation)  
-    vm,hm = calc_action(x,y,vx,vy,theta,vtheta,left_leg_touching,right_leg_touching)
+    x,y,vx,vy,theta,vtheta,left_leg_touching,right_leg_touching,ew = perceptions(observation)  
+    vm,hm = calc_action(x,y,vx,vy,theta,vtheta,left_leg_touching,right_leg_touching,ew)
 
     #action = env.action_space.sample()
     
