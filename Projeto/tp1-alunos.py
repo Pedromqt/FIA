@@ -73,7 +73,7 @@ def calc_action(x, y, vx, vy, theta, vtheta, llt, rlt,ew):
     hm = 0
     
     if(ew):
-        anguloLim = 0.28
+        anguloLim = 0.25
     else:
         anguloLim = 0.2
         
@@ -95,9 +95,9 @@ def calc_action(x, y, vx, vy, theta, vtheta, llt, rlt,ew):
     elif x < 0 and vx < 0.04:
         hm = 1
         
-    #ativa motor vertical caso a nave nao esteja centrada
-    if (y < 0.2 and (x < -0.21 or x > 0.21)):
-        vm = 0.4
+    # Motor vertical caso a nave nao esteja centrada
+    if (y < 0.125 and (x < -0.21 or x > 0.21)):
+        vm = 0.9
         
     # Motores Horizontais de acordo com o angulo e velocidade de rotação da nave:
     if theta < -anguloLim and y > 0.1:
