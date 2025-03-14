@@ -3,7 +3,7 @@ import numpy as np
 import pygame
 
 ENABLE_WIND = True
-WIND_POWER = 15.0
+WIND_POWER = 10.0
 TURBULENCE_POWER = 0.0
 GRAVITY = -10.0
 #RENDER_MODE = 'human'
@@ -68,7 +68,6 @@ def perceptions(observation):
 
 
 #Actions
-##TODO: Defina as suas ações aqui
 def calc_action(x, y, vx, vy, theta, vtheta):
     h_motors = 0 
     if(ENABLE_WIND):
@@ -89,18 +88,17 @@ def calc_action(x, y, vx, vy, theta, vtheta):
         v_motor = 0
     
     # Motores horizontais de acordo com a posição da nave:
-    if (abs(x) > 0.04) and y > 0.91:  
-        if x > 0.4 and vx > -0.04:  
+    if y >= 0.91:  
+        if x > 0.0305 and vx > -0.04:  
             h_motors = -0.85
-        elif x < -0.04 and vx < 0.04:  
+        elif x < -0.0305 and vx < 0.04:  
             h_motors = 0.85
-    elif (abs(x) > 0.04) and y < 0.91:
-        if x > 0.04 and vx > -0.04:  
+    else:
+        if x > 0.0305 and vx > -0.04:  
             h_motors = -0.95
-        elif x < -0.04 and vx < 0.04:  
+        elif x < -0.0305 and vx < 0.04:  
             h_motors = 0.95
             
-    
     # Motores Horizontais de acordo com o angulo e velocidade de rotação da nave:
     if theta < -anguloLim and y > 0.1:
         h_motors = -0.9
