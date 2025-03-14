@@ -73,7 +73,7 @@ def calc_action(x, y, vx, vy, theta, vtheta, llt, rlt,ew):
     hm = 0
     
     if(ew):
-        anguloLim = 0.25
+        anguloLim = 0.28
     else:
         anguloLim = 0.2
         
