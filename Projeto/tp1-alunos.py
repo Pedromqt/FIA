@@ -70,44 +70,46 @@ def perceptions(observation):
 #Actions
 ##TODO: Defina as suas ações aqui
 def calc_action(x, y, vx, vy, theta, vtheta):
-    
     h_motors = 0 
-    
+    if(ENABLE_WIND):
+        anguloLim = 0.28
+    else: 
+        anguloLim = 0.2
+        
     # Motores Horizontais de acordo com a velocidade da nave:
-    if vx > 0.1: 
+    if vx > 0.175:
         h_motors = -1
-    elif vx < -0.1:
+    elif vx < -0.175:
         h_motors = 1
         
-        
     # Motor Vertical de acordo com a velocidade da nave:
-    if vy < -0.08 and y > 0.04:
+    if vy < -0.08 and y > 0.055:
         v_motor = 1
     else: 
         v_motor = 0
     
     # Motores horizontais de acordo com a posição da nave:
-    if (abs(x) > 0.04) and y > 0.8:  
+    if (abs(x) > 0.04) and y > 0.91:  
         if x > 0.4 and vx > -0.04:  
-            h_motors = -0.8
+            h_motors = -0.85
         elif x < -0.04 and vx < 0.04:  
-            h_motors = 0.8
-    elif (abs(x) > 0.04) and y < 0.8:
+            h_motors = 0.85
+    elif (abs(x) > 0.04) and y < 0.91:
         if x > 0.04 and vx > -0.04:  
-            h_motors = -1
+            h_motors = -0.95
         elif x < -0.04 and vx < 0.04:  
-            h_motors = 1
+            h_motors = 0.95
             
     
     # Motores Horizontais de acordo com o angulo e velocidade de rotação da nave:
-    if theta < -0.25 and y > 0.1:
+    if theta < -anguloLim and y > 0.1:
         h_motors = -0.9
-    elif theta > 0.25  and y > 0.1:
+    elif theta > anguloLim  and y > 0.1:
         h_motors = 0.9
 
-    if vtheta < -0.25 and y > 0.1:
+    if vtheta < -anguloLim and y > 0.1:
         h_motors = -1
-    elif vtheta > 0.25 and y > 0.1:
+    elif vtheta > anguloLim and y > 0.1:
         h_motors = 1 
 
 
