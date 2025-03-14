@@ -76,7 +76,7 @@ def calc_action(x, y, vx, vy, theta, vtheta, llt, rlt,ew):
         anguloLim = 0.28
     else: 
         anguloLim = 0.2
-     
+    
     # Caso aterre fora, volta a subir 
     if llt and rlt and (x < -0.4 or x > 0.4):
         vm = 1 
@@ -90,19 +90,19 @@ def calc_action(x, y, vx, vy, theta, vtheta, llt, rlt,ew):
     # Motor Vertical de acordo com a velocidade da nave:
     if vy < -0.08 and y > 0.055:
         vm = 1
-    else: 
+    else:
         vm = 0
     
     # Motores horizontais de acordo com a posição da nave:
     if y >= 0.91:  
-        if x > 0.0305 and vx > -0.04:  
+        if x > 0 and vx > -0.04:  
             hm = -0.85
-        elif x < -0.0305 and vx < 0.04:  
+        elif x < 0 and vx < 0.04:  
             hm = 0.85
     else:
-        if x > 0.0305 and vx > -0.04:  
+        if x > 0 and vx > -0.04:  
             hm = -0.95
-        elif x < -0.0305 and vx < 0.04:  
+        elif x < 0 and vx < 0.04:  
             hm = 0.95
             
     # Motores Horizontais de acordo com o angulo e velocidade de rotação da nave:
@@ -110,12 +110,11 @@ def calc_action(x, y, vx, vy, theta, vtheta, llt, rlt,ew):
         hm = -0.9
     elif theta > anguloLim  and y > 0.1:
         hm = 0.9
-
     if vtheta < -anguloLim and y > 0.1:
         hm = -1
     elif vtheta > anguloLim and y > 0.1:
-        hm = 1 
-
+        hm = 1
+    
     return vm, hm
 
 
