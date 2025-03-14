@@ -2,7 +2,7 @@ import gymnasium as gym
 import numpy as np
 import pygame
 
-ENABLE_WIND = True
+ENABLE_WIND = False
 WIND_POWER = 15.0
 TURBULENCE_POWER = 0.0
 GRAVITY = -10.0
@@ -77,6 +77,10 @@ def calc_action(x, y, vx, vy, theta, vtheta, left_leg_touching, right_leg_touchi
         anguloLim = 0.28
     else: 
         anguloLim = 0.2
+     
+    # Caso aterre fora, volta a subir 
+    if left_leg_touching and right_leg_touching and (x < -0.4 or x > 0.4):
+        vm = 1 
         
     # Motores Horizontais de acordo com a velocidade da nave:
     if vx > 0.175:
