@@ -146,20 +146,26 @@ def generate_initial_population():
         population.append({'genotype': genotype, 'fitness': None})
     return population
 
-def parent_selection(population):
-    #TODO
-    #Select an individual from the population
-    return copy.deepcopy(random.choice(population))
+def parent_selection(population,k=3):
+    # Tournament selection
+    selected = random.sample(population, k)
+    selected.sort(key=lambda x: x['fitness'], reverse=True)
+    return copy.deepcopy(selected[0])
 
 def crossover(p1, p2):
-    #TODO
-    #Create an offspring from the individuals p1 and p2
-    return p1
+    child = {'genotype' : [], 'fitness': None}
+    for gene1, gene2 in zip(p1['genotype'], p2['genotype']):
+        if random.random() < 0.5:
+            child['genotype'].append(gene1)
+        else:
+            child['genotype'].append(gene2)
+    return child
 
 def mutation(p):
-    #TODO
-    #Mutate the individual p
-    return p    
+    for i in range(len(p['genotype'])):
+        if random.random() < PROB_MUTATION:
+            p['genotype'][i] += random.gauss(0, STD_DEV)
+    return p 
     
 def survival_selection(population, offspring):
     #reevaluation of the elite
