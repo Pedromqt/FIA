@@ -26,16 +26,16 @@ GENOTYPE_SIZE = 0
 for i in range(1, len(SHAPE)):
     GENOTYPE_SIZE += SHAPE[i-1]*SHAPE[i]
 
-POPULATION_SIZE = 50
-NUMBER_OF_GENERATIONS = 10
-PROB_CROSSOVER = 0.7
+POPULATION_SIZE = 100
+NUMBER_OF_GENERATIONS = 100
+PROB_CROSSOVER = 0.9
 
   
 PROB_MUTATION = 1.0/GENOTYPE_SIZE
 STD_DEV = 0.1
 
 
-ELITE_SIZE = 1
+ELITE_SIZE = 0
 
 
 def network(shape, observation,ind):
@@ -76,17 +76,21 @@ def objective_function(observation):
     #on the horizontal distance to the landing pad, the vertical velocity and the angle
     x = observation[0]
     y = observation[1]
-    return -abs(x) - abs(y), check_successful_landing(observation)
+    vy = observation[3]
+    theta = observation[4]
+    landing_bonus = 100 if check_successful_landing(observation) else 0
+    return -abs(x) - abs(y) - abs(vy) - abs(theta) + landing_bonus, check_successful_landing(observation)
+
 
 def simulate(genotype, render_mode = None, seed=None, env = None):
     #Simulates an episode of Lunar Lander, evaluating an individual
     env_was_none = env is None
     if env is None:
-        env = gym.make("LunarLander-v3", render_mode =render_mode, 
-        continuous=True, gravity=GRAVITY, 
-        enable_wind=ENABLE_WIND, wind_power=WIND_POWER, 
-        turbulence_power=TURBULENCE_POWER)    
-        
+        env = gym.make("LunarLander-v3", render_mode=render_mode,
+                       continuous=True, gravity=GRAVITY,
+                       enable_wind=ENABLE_WIND, wind_power=WIND_POWER,
+                       turbulence_power=TURBULENCE_POWER)
+
     observation, info = env.reset(seed=seed)
 
     for _ in range(STEPS):
@@ -97,8 +101,8 @@ def simulate(genotype, render_mode = None, seed=None, env = None):
 
         if terminated == True or truncated == True:
             break
-    
-    if env_was_none:    
+
+    if env_was_none:
         env.close()
 
     return objective_function(prev_observation)
@@ -113,15 +117,13 @@ def evaluate(evaluationQueue, evaluatedQueue):
         turbulence_power=TURBULENCE_POWER)    
     while True:
         ind = evaluationQueue.get()
-
         if ind is None:
             break
-            
-        ind['fitness'] = simulate(ind['genotype'], seed = None, env = env)[0]
-                
+        ind['fitness'] = simulate(ind['genotype'], seed=None, env=env)[0]
         evaluatedQueue.put(ind)
     env.close()
-    
+
+
 def evaluate_population(population):
     #Evaluates a list of individuals using multiple processes
     for i in range(len(population)):
@@ -131,6 +133,7 @@ def evaluate_population(population):
         ind = evaluatedQueue.get()
         new_pop.append(ind)
     return new_pop
+
 
 def generate_initial_population():
     #Generates the initial population
@@ -152,6 +155,7 @@ def parent_selection(population,k=3):
     selected.sort(key=lambda x: x['fitness'], reverse=True)
     return copy.deepcopy(selected[0])
 
+
 def crossover(p1, p2):
     child = {'genotype' : [], 'fitness': None}
     for gene1, gene2 in zip(p1['genotype'], p2['genotype']):
@@ -161,12 +165,14 @@ def crossover(p1, p2):
             child['genotype'].append(gene2)
     return child
 
+
 def mutation(p):
     for i in range(len(p['genotype'])):
         if random.random() < PROB_MUTATION:
             p['genotype'][i] += random.gauss(0, STD_DEV)
-    return p 
-    
+    return p
+
+
 def survival_selection(population, offspring):
     #reevaluation of the elite
     offspring.sort(key = lambda x: x['fitness'], reverse=True)
@@ -200,10 +206,8 @@ def evolution():
                 p1 = parent_selection(population)
                 p2 = parent_selection(population)
                 ni = crossover(p1, p2)
-
             else:
                 ni = parent_selection(population)
-                
             ni = mutation(ni)
             offspring.append(ni)
             
@@ -227,6 +231,7 @@ def evolution():
     #Return the list of bests
     return bests
 
+
 def load_bests(fname):
     #Load bests from file
     bests = []
@@ -236,9 +241,10 @@ def load_bests(fname):
             bests.append(( eval(fitness),eval(shape), eval(genotype)))
     return bests
 
+
 if __name__ == '__main__':
-    
     evolve = True
+    print(f"{PROB_MUTATION}ssasa")
     render_mode = 'human'
     if evolve:
         seeds = [964, 952, 364, 913, 140, 726, 112, 631, 881, 844, 965, 672, 335, 611, 457, 591, 551, 538, 673, 437, 513, 893, 709, 489, 788, 709, 751, 467, 596, 976]
@@ -248,23 +254,18 @@ if __name__ == '__main__':
             with open(f'log{i}.txt', 'w') as f:
                 for b in bests:
                     f.write(f'{b[1]}\t{SHAPE}\t{b[0]}\n')
-
-                
     else:
         #validate individual
         bests = load_bests('log0.txt')
         b = bests[-1]
         SHAPE = b[1]
         ind = b[2]
-            
         ind = {'genotype': ind, 'fitness': None}
-            
-            
         ntests = 1000
-
         fit, success = 0, 0
         for i in range(1,ntests+1):
             f, s = simulate(ind['genotype'], render_mode=render_mode, seed = None)
             fit += f
             success += s
+        
         print(fit/ntests, success/ntests)
