@@ -76,10 +76,35 @@ def objective_function(observation):
     #on the horizontal distance to the landing pad, the vertical velocity and the angle
     x = observation[0]
     y = observation[1]
+    vx = observation[2]
     vy = observation[3]
     theta = observation[4]
-    landing_bonus = 100 if check_successful_landing(observation) else 0
-    return -abs(x) - abs(y) - abs(vy) - abs(theta) + landing_bonus, check_successful_landing(observation)
+    vtheta = observation[5]
+    left_leg = observation[6]
+    right_leg = observation[7]
+
+    # Penalizações por distância e velocidade
+    horizontal_penalty = abs(x)
+    vertical_penalty = abs(y)
+    vel_penalty = abs(vx) + abs(vy)
+    angle_penalty = abs(theta)
+    angular_velocity_penalty = abs(vtheta)
+
+
+    # Grande bónus para aterragem com sucesso
+    landing_bonus = 50 if check_successful_landing(observation) else 0
+
+    # Fitness final: minimizar penalizações e maximizar bónus
+    fitness = -(
+        2 * horizontal_penalty +
+        1 * vertical_penalty +
+        1 * vel_penalty +
+        1 * angle_penalty +
+        1 * angular_velocity_penalty
+    ) + landing_bonus
+
+    return fitness, check_successful_landing(observation)
+
 
 
 def simulate(genotype, render_mode = None, seed=None, env = None):
@@ -249,8 +274,8 @@ def load_bests(fname):
 if __name__ == '__main__':
     evolve = True
     print(f"{PROB_MUTATION}- Prob Mutation")
-    render_mode = 'human'
-    #render_mode = None
+    #render_mode = 'human'
+    render_mode = None
     if evolve:
         seeds = [964, 952, 364, 913, 140, 726, 112, 631, 881, 844, 965, 672, 335, 611, 457, 591, 551, 538, 673, 437, 513, 893, 709, 489, 788, 709, 751, 467, 596, 976]
         for i in range(30):    
