@@ -35,7 +35,7 @@ PROB_MUTATION = 1.0/GENOTYPE_SIZE
 STD_DEV = 0.1
 
 
-ELITE_SIZE = 0
+ELITE_SIZE = 1
 
 
 def network(shape, observation,ind):
@@ -119,7 +119,10 @@ def evaluate(evaluationQueue, evaluatedQueue):
         ind = evaluationQueue.get()
         if ind is None:
             break
-        ind['fitness'] = simulate(ind['genotype'], seed=None, env=env)[0]
+        fit, success = simulate(ind['genotype'], seed=None, env=env)
+        ind['fitness'] = fit
+        ind['success'] = success  # ESSENCIAL!
+
         evaluatedQueue.put(ind)
     env.close()
 
@@ -220,7 +223,8 @@ def evolution():
         #Print and save the best of the current generation
         best = (population[0]['genotype']), population[0]['fitness']
         bests.append(best)
-        print(f'Best of generation {gen}: {best[1]}')
+        success_rate = sum([ind.get('success', 0) for ind in population]) / POPULATION_SIZE
+        print(f'Best of generation {gen}: {best[1]} | Success Rate: {success_rate:.2f}')
 
     #Stop evaluation processes
     for i in range(NUM_PROCESSES):
@@ -244,8 +248,9 @@ def load_bests(fname):
 
 if __name__ == '__main__':
     evolve = True
-    print(f"{PROB_MUTATION}ssasa")
+    print(f"{PROB_MUTATION}- Prob Mutation")
     render_mode = 'human'
+    #render_mode = None
     if evolve:
         seeds = [964, 952, 364, 913, 140, 726, 112, 631, 881, 844, 965, 672, 335, 611, 457, 591, 551, 538, 673, 437, 513, 893, 709, 489, 788, 709, 751, 467, 596, 976]
         for i in range(30):    
@@ -264,6 +269,7 @@ if __name__ == '__main__':
         ntests = 1000
         fit, success = 0, 0
         for i in range(1,ntests+1):
+            print(f"{i}")
             f, s = simulate(ind['genotype'], render_mode=render_mode, seed = None)
             fit += f
             success += s
