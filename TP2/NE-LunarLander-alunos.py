@@ -6,7 +6,7 @@ import os
 from multiprocessing import Process, Queue
 
 # CONFIG
-ENABLE_WIND = True
+ENABLE_WIND = False
 WIND_POWER = 15.0
 TURBULENCE_POWER = 0.0
 GRAVITY = -10.0
@@ -31,7 +31,7 @@ NUMBER_OF_GENERATIONS = 100
 PROB_CROSSOVER = 0.9
 
   
-PROB_MUTATION = 0.05
+PROB_MUTATION = 1.0/GENOTYPE_SIZE
 STD_DEV = 0.1
 
     
@@ -70,48 +70,43 @@ def check_successful_landing(observation):
     return False
 
 def objective_function(observation):
-    # Extract state variables
     x, y, vx, vy, theta, vtheta, contact_left, contact_right = observation
-    
-    landed_successfully = check_successful_landing(observation) # User's definition of success
+    landed_successfully = check_successful_landing(observation)
     legs_touching = contact_left == 1 and contact_right == 1
 
-    fitness = 0.0 
+    fitness = 0.0
 
-    # --- Constants for Fine-Tuning ---
-    # Flight Phase Penalties & Rewards
-    W_X_POS = 45.0            # Penalty for horizontal deviation
-    W_VX = 65.0               # Penalty for horizontal velocity
-    W_VY_DEVIATION = 85.0     # Penalty for deviation from ideal vertical velocity
-    W_VY_POSITIVE_LOW = 160.0 # Strong penalty for upward vy when close to ground
-    W_THETA = 80.0            # Penalty for lander angle
-    W_VTHETA = 55.0           # Penalty for angular velocity
+    #Penalties and Rewards
+    W_X_POS = 45.0
+    W_VX = 65.0
+    W_VY_DEVIATION = 85.0
+    W_VY_POSITIVE_LOW = 160.0
+    W_THETA = 80.0
+    W_VTHETA = 55.0
     
-    PROXIMITY_REWARD_SCALE = 200.0 # Increased scale for approaching the pad
-    MAX_PROXIMITY_DISTANCE_EFFECTIVE = 2.8 # Slightly wider effective range for reward
-    Y_PROXIMITY_WEIGHT = 1.75      # Emphasize vertical closure more in proximity calc
+    PROXIMITY_REWARD_SCALE = 200.0
+    MAX_PROXIMITY_DISTANCE_EFFECTIVE = 2.8
+    Y_PROXIMITY_WEIGHT = 1.75
 
-    # Ideal Vertical Velocity near ground (for gentle descent/hover)
-    TARGET_IMPACT_VY = -0.05 # Target for soft touch / stable hover
+    TARGET_IMPACT_VY = -0.05
 
-    # Controlled Hover Bonus (if timeout in excellent state, no leg contact)
-    CONTROLLED_HOVER_BONUS_BASE = 300.0 # Increased base for achieving controlled hover
-    HOVER_ADDITIONAL_PRECISION_BONUS = 100.0 # Extra for exceptional hover
+    CONTROLLED_HOVER_BONUS_BASE = 300.0
+    HOVER_ADDITIONAL_PRECISION_BONUS = 100.0
     HOVER_X_THRESHOLD = 0.07
-    HOVER_Y_THRESHOLD = 0.12 # Lower for more precise hover
+    HOVER_Y_THRESHOLD = 0.12
     HOVER_VX_THRESHOLD = 0.07
-    HOVER_VY_ERROR_THRESHOLD = 0.07 # abs(vy - TARGET_IMPACT_VY)
-    HOVER_THETA_THRESHOLD_RAD = np.deg2rad(6.0) # Stricter angle
+    HOVER_VY_ERROR_THRESHOLD = 0.07
+    HOVER_THETA_THRESHOLD_RAD = np.deg2rad(6.0)
     HOVER_VTHETA_THRESHOLD = 0.07
 
-    # Crash Outcome Adjustments & Penalties
-    CRASH_ADJ_ON_PAD = 200.0         # Increased positive adjustment for controlled crash on pad
-    CRASH_ADJ_NEAR_PAD = 25.0        # Small positive adjustment for crashing near pad
-    CRASH_ADJ_FAR_PAD = -200.0       # Increased negative adjustment for crashing far
+    # Crash Penalties
+    CRASH_ADJ_ON_PAD = 200.0
+    CRASH_ADJ_NEAR_PAD = 25.0
+    CRASH_ADJ_FAR_PAD = -200.0
     CRASH_X_THRESHOLD_ON_PAD = 0.30
     CRASH_X_THRESHOLD_NEAR_PAD = 0.65
 
-    # Crash condition penalty factors (applied to squared deviations)
+    # Crash condition penalty factors
     CRASH_X_PENALTY_FACTOR = 55.0
     CRASH_VX_PENALTY_FACTOR = 45.0
     CRASH_VY_PENALTY_FACTOR = 65.0
@@ -119,46 +114,46 @@ def objective_function(observation):
     CRASH_VTHETA_PENALTY_FACTOR = 30.0
 
     # Successful Landing Bonuses
-    SUCCESS_BONUS_BASE = 1300.0 # Further increased base success bonus
-    # Precision bonuses for exceptionally clean landings
-    SUCCESS_PRECISION_TOTAL_BONUS_CAP = 250.0 # Max combined precision bonus
-    SUCCESS_VX_CLEAN_FACTOR = 0.3 # Proportion of cap
-    SUCCESS_VY_CLEAN_FACTOR = 0.4 # Proportion of cap
-    SUCCESS_THETA_CLEAN_FACTOR = 0.3 # Proportion of cap
-    # Thresholds for "clean" aspects (very strict for max bonus points)
+    SUCCESS_BONUS_BASE = 1300.0
+    # Precision bonuses for clean landings
+    SUCCESS_PRECISION_TOTAL_BONUS_CAP = 250.0
+    SUCCESS_VX_CLEAN_FACTOR = 0.3
+    SUCCESS_VY_CLEAN_FACTOR = 0.4
+    SUCCESS_THETA_CLEAN_FACTOR = 0.3
+    # Thresholds for "clean" landing
     VX_CLEAN_THRESHOLD = 0.03
     THETA_CLEAN_THRESHOLD_RAD = np.deg2rad(3.0)
 
-    # --- Height Proximity Factor (0=high, 1=low, for scaling flight penalties) ---
+    # Height Proximity Factor (0=high, 1=low, for scaling flight penalties)
     y_for_min_effect = 1.35 
-    y_for_max_effect = 0.02 # Penalties max out very close to ground
+    y_for_max_effect = 0.02
     if y > y_for_min_effect: height_proximity_scale = 0.0
     elif y < y_for_max_effect: height_proximity_scale = 1.0
     else: height_proximity_scale = (y_for_min_effect - y) / (y_for_min_effect - y_for_max_effect)
 
-    # --- Penalties & Rewards During Flight Phase ---
-    current_flight_fitness = 0.0 # Accumulate flight penalties/rewards separately
+    #Penalties & Rewards During Flight
+    current_flight_fitness = 0.0
     current_flight_fitness -= W_X_POS * (x**2) * (1 + 0.8 * height_proximity_scale)
     current_flight_fitness -= W_VX * (vx**2) * (1 + 1.3 * height_proximity_scale)
     
-    ideal_vy_high = -0.50 # Allow slightly faster descent from high altitude
+    ideal_vy_high = -0.50
     target_vy_flight = ideal_vy_high + (TARGET_IMPACT_VY - ideal_vy_high) * height_proximity_scale
     vy_flight_error = vy - target_vy_flight
     current_flight_fitness -= W_VY_DEVIATION * (vy_flight_error**2) * (1 + 1.3 * height_proximity_scale)
-    if y < 0.5 and vy > 0.015: # Penalize upward motion more strongly when lower
-        current_flight_fitness -= W_VY_POSITIVE_LOW * (vy**1.5) * (1 + 1.2 * height_proximity_scale) # Use 1.5 power
+    if y < 0.5 and vy > 0.015:
+        current_flight_fitness -= W_VY_POSITIVE_LOW * (vy**1.5) * (1 + 1.2 * height_proximity_scale)
         
-    current_flight_fitness -= W_THETA * (theta**2) * (1 + 2.0 * height_proximity_scale) # Angle is very critical
+    current_flight_fitness -= W_THETA * (theta**2) * (1 + 2.0 * height_proximity_scale)
     current_flight_fitness -= W_VTHETA * (vtheta**2) * (1 + 1.3 * height_proximity_scale)
 
     if not legs_touching:
         distance_to_pad_center = (x**2 + (y * Y_PROXIMITY_WEIGHT)**2)**0.5
         proximity_factor = max(0, 1 - distance_to_pad_center / MAX_PROXIMITY_DISTANCE_EFFECTIVE)
-        current_flight_fitness += PROXIMITY_REWARD_SCALE * (proximity_factor**3) # Cubed for steeper reward
+        current_flight_fitness += PROXIMITY_REWARD_SCALE * (proximity_factor**3)
     
-    fitness = current_flight_fitness # Initialize final fitness with flight performance
+    fitness = current_flight_fitness
 
-    # --- End-State Evaluation ---
+    # Landing Points
     if legs_touching:
         if landed_successfully:
             fitness += SUCCESS_BONUS_BASE
@@ -172,21 +167,21 @@ def objective_function(observation):
             
             precision_bonus += (SUCCESS_THETA_CLEAN_FACTOR * SUCCESS_PRECISION_TOTAL_BONUS_CAP) * max(0, 1 - abs(theta) / THETA_CLEAN_THRESHOLD_RAD)
             fitness += precision_bonus
-        else: # Crashed
+        else:
             base_crash_score_adjustment = 0.0
             if abs(x) <= CRASH_X_THRESHOLD_ON_PAD: base_crash_score_adjustment = CRASH_ADJ_ON_PAD
             elif abs(x) <= CRASH_X_THRESHOLD_NEAR_PAD: base_crash_score_adjustment = CRASH_ADJ_NEAR_PAD
             else: base_crash_score_adjustment = CRASH_ADJ_FAR_PAD
             fitness += base_crash_score_adjustment
             
-            # Penalties are subtracted (squared deviations from ideal impact)
+            # Penalties are subtracted
             fitness -= CRASH_X_PENALTY_FACTOR * (x**2) 
             fitness -= CRASH_VX_PENALTY_FACTOR * (vx**2)
             vy_impact_error = vy - TARGET_IMPACT_VY
             fitness -= CRASH_VY_PENALTY_FACTOR * (vy_impact_error**2)
             fitness -= CRASH_THETA_PENALTY_FACTOR * (theta**2)
             fitness -= CRASH_VTHETA_PENALTY_FACTOR * (vtheta**2)
-    else: # Not touching ground (e.g., timed out)
+    else:
         is_centered_x = abs(x) < HOVER_X_THRESHOLD
         is_low_enough_y = y < HOVER_Y_THRESHOLD 
         is_stable_vx = abs(vx) < HOVER_VX_THRESHOLD
@@ -196,14 +191,12 @@ def objective_function(observation):
 
         if is_centered_x and is_low_enough_y and is_stable_vx and is_stable_vy and is_stable_theta and is_stable_vtheta:
             fitness += CONTROLLED_HOVER_BONUS_BASE
-            # Additional bonus for exceptional precision in hover
             hover_precision_score = (1 - abs(x)/HOVER_X_THRESHOLD) + \
                                     (1 - y/HOVER_Y_THRESHOLD) + \
                                     (1 - abs(vx)/HOVER_VX_THRESHOLD) + \
                                     (1 - abs(vy - TARGET_IMPACT_VY)/HOVER_VY_ERROR_THRESHOLD) + \
                                     (1 - abs(theta)/HOVER_THETA_THRESHOLD_RAD) + \
                                     (1 - abs(vtheta)/HOVER_VTHETA_THRESHOLD)
-            # Max hover_precision_score = 6 (if all terms are 1)
             fitness += (hover_precision_score / 6.0) * HOVER_ADDITIONAL_PRECISION_BONUS
     
     return fitness, landed_successfully
@@ -247,7 +240,7 @@ def evaluate(evaluationQueue, evaluatedQueue):
             break
         fit, success = simulate(ind['genotype'], seed=None, env=env)
         ind['fitness'] = fit
-        ind['success'] = success  # ESSENCIAL!
+        ind['success'] = success
 
         evaluatedQueue.put(ind)
     env.close()
@@ -374,12 +367,11 @@ def load_bests(fname):
 
 if __name__ == '__main__':
     evolve = True
-    print(f"{PROB_MUTATION}- Prob Mutation")
     #render_mode = 'human'
     render_mode = None
     if evolve:
         seeds = [964, 952, 364, 913, 140, 726, 112, 631, 881, 844, 965, 672, 335, 611, 457, 591, 551, 538, 673, 437, 513, 893, 709, 489, 788, 709, 751, 467, 596, 976]
-        for i in range(5):    
+        for i in range(30):    
             random.seed(seeds[i])
             bests = evolution()
             with open(f'log{i}.txt', 'w') as f:
