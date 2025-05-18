@@ -6,7 +6,7 @@ import os
 from multiprocessing import Process, Queue
 
 # CONFIG
-ENABLE_WIND = False
+ENABLE_WIND = True
 WIND_POWER = 15.0
 TURBULENCE_POWER = 0.0
 GRAVITY = -10.0
@@ -31,11 +31,11 @@ NUMBER_OF_GENERATIONS = 100
 PROB_CROSSOVER = 0.9
 
   
-PROB_MUTATION = 1.0/GENOTYPE_SIZE
+PROB_MUTATION = 0.05
 STD_DEV = 0.1
 
-
-ELITE_SIZE = 0
+    
+ELITE_SIZE = 1
 
 def network(shape, observation,ind):
     #Computes the output of the neural network given the observation and the genotype
@@ -71,102 +71,142 @@ def check_successful_landing(observation):
 
 def objective_function(observation):
     # Extract state variables
-    x = observation[0]         # Horizontal position (0 is center of landing pad)
-    y = observation[1]         # Vertical position (higher is better for altitude)
-    vx = observation[2]        # Horizontal velocity
-    vy = observation[3]        # Vertical velocity
-    theta = observation[4]     # Angle
-    vtheta = observation[5]    # Angular velocity
-    contact_left = observation[6]  # Left leg contact
-    contact_right = observation[7] # Right leg contact
+    x, y, vx, vy, theta, vtheta, contact_left, contact_right = observation
     
-    # Check landing status
-    landed = check_successful_landing(observation)
+    landed_successfully = check_successful_landing(observation) # User's definition of success
     legs_touching = contact_left == 1 and contact_right == 1
+
+    fitness = 0.0 
+
+    # --- Constants for Fine-Tuning ---
+    # Flight Phase Penalties & Rewards
+    W_X_POS = 45.0            # Penalty for horizontal deviation
+    W_VX = 65.0               # Penalty for horizontal velocity
+    W_VY_DEVIATION = 85.0     # Penalty for deviation from ideal vertical velocity
+    W_VY_POSITIVE_LOW = 160.0 # Strong penalty for upward vy when close to ground
+    W_THETA = 80.0            # Penalty for lander angle
+    W_VTHETA = 55.0           # Penalty for angular velocity
     
-    # Base fitness (will be negative unless landing is successful)
-    fitness = 0
+    PROXIMITY_REWARD_SCALE = 200.0 # Increased scale for approaching the pad
+    MAX_PROXIMITY_DISTANCE_EFFECTIVE = 2.8 # Slightly wider effective range for reward
+    Y_PROXIMITY_WEIGHT = 1.75      # Emphasize vertical closure more in proximity calc
+
+    # Ideal Vertical Velocity near ground (for gentle descent/hover)
+    TARGET_IMPACT_VY = -0.05 # Target for soft touch / stable hover
+
+    # Controlled Hover Bonus (if timeout in excellent state, no leg contact)
+    CONTROLLED_HOVER_BONUS_BASE = 300.0 # Increased base for achieving controlled hover
+    HOVER_ADDITIONAL_PRECISION_BONUS = 100.0 # Extra for exceptional hover
+    HOVER_X_THRESHOLD = 0.07
+    HOVER_Y_THRESHOLD = 0.12 # Lower for more precise hover
+    HOVER_VX_THRESHOLD = 0.07
+    HOVER_VY_ERROR_THRESHOLD = 0.07 # abs(vy - TARGET_IMPACT_VY)
+    HOVER_THETA_THRESHOLD_RAD = np.deg2rad(6.0) # Stricter angle
+    HOVER_VTHETA_THRESHOLD = 0.07
+
+    # Crash Outcome Adjustments & Penalties
+    CRASH_ADJ_ON_PAD = 200.0         # Increased positive adjustment for controlled crash on pad
+    CRASH_ADJ_NEAR_PAD = 25.0        # Small positive adjustment for crashing near pad
+    CRASH_ADJ_FAR_PAD = -200.0       # Increased negative adjustment for crashing far
+    CRASH_X_THRESHOLD_ON_PAD = 0.30
+    CRASH_X_THRESHOLD_NEAR_PAD = 0.65
+
+    # Crash condition penalty factors (applied to squared deviations)
+    CRASH_X_PENALTY_FACTOR = 55.0
+    CRASH_VX_PENALTY_FACTOR = 45.0
+    CRASH_VY_PENALTY_FACTOR = 65.0
+    CRASH_THETA_PENALTY_FACTOR = 45.0
+    CRASH_VTHETA_PENALTY_FACTOR = 30.0
+
+    # Successful Landing Bonuses
+    SUCCESS_BONUS_BASE = 1300.0 # Further increased base success bonus
+    # Precision bonuses for exceptionally clean landings
+    SUCCESS_PRECISION_TOTAL_BONUS_CAP = 250.0 # Max combined precision bonus
+    SUCCESS_VX_CLEAN_FACTOR = 0.3 # Proportion of cap
+    SUCCESS_VY_CLEAN_FACTOR = 0.4 # Proportion of cap
+    SUCCESS_THETA_CLEAN_FACTOR = 0.3 # Proportion of cap
+    # Thresholds for "clean" aspects (very strict for max bonus points)
+    VX_CLEAN_THRESHOLD = 0.03
+    THETA_CLEAN_THRESHOLD_RAD = np.deg2rad(3.0)
+
+    # --- Height Proximity Factor (0=high, 1=low, for scaling flight penalties) ---
+    y_for_min_effect = 1.35 
+    y_for_max_effect = 0.02 # Penalties max out very close to ground
+    if y > y_for_min_effect: height_proximity_scale = 0.0
+    elif y < y_for_max_effect: height_proximity_scale = 1.0
+    else: height_proximity_scale = (y_for_min_effect - y) / (y_for_min_effect - y_for_max_effect)
+
+    # --- Penalties & Rewards During Flight Phase ---
+    current_flight_fitness = 0.0 # Accumulate flight penalties/rewards separately
+    current_flight_fitness -= W_X_POS * (x**2) * (1 + 0.8 * height_proximity_scale)
+    current_flight_fitness -= W_VX * (vx**2) * (1 + 1.3 * height_proximity_scale)
     
-    # === POSITION REWARDS/PENALTIES ===
-    # Horizontal centering - more penalty as we get farther from center
-    horizontal_penalty = abs(x) * (1 + abs(x))  # Quadratic penalty for being off-center
-    
-    # Height penalty - increases as lander gets closer to ground to encourage precision
-    height_factor = max(0.2, min(1.0, 1.0 - y/1.0)) if y > 0 else 1.0
-    
-    # === VELOCITY REWARDS/PENALTIES ===
-    # Horizontal velocity - should approach zero as we near the ground
-    vx_penalty = abs(vx) * (2.0 + height_factor * 8.0)
-    
-    # Vertical velocity - should be slow and controlled, especially near ground
-    # Allow faster descent when high, require slower descent when close to ground
-    ideal_vy = min(-0.05, -0.2 * y) if y > 0.2 else -0.05
-    vy_penalty = abs(vy - ideal_vy) * (3.0 + height_factor * 12.0)
-    
-    # === ORIENTATION REWARDS/PENALTIES ===
-    # Angle penalty - lander should be upright
-    angle_penalty = abs(theta) * (20.0 + height_factor * 30.0)
-    
-    # Angular velocity penalty - should not be spinning
-    angular_velocity_penalty = abs(vtheta) * 10.0
-    
-    # === CALCULATE FITNESS ===
-    # Apply penalties
-    fitness -= (
-        40 * horizontal_penalty +
-        70 * vx_penalty +
-        80 * vy_penalty +
-        80 * angle_penalty +
-        50 * angular_velocity_penalty
-    )
-    
-    # Distance-based reward - encourage getting closer to landing pad
+    ideal_vy_high = -0.50 # Allow slightly faster descent from high altitude
+    target_vy_flight = ideal_vy_high + (TARGET_IMPACT_VY - ideal_vy_high) * height_proximity_scale
+    vy_flight_error = vy - target_vy_flight
+    current_flight_fitness -= W_VY_DEVIATION * (vy_flight_error**2) * (1 + 1.3 * height_proximity_scale)
+    if y < 0.5 and vy > 0.015: # Penalize upward motion more strongly when lower
+        current_flight_fitness -= W_VY_POSITIVE_LOW * (vy**1.5) * (1 + 1.2 * height_proximity_scale) # Use 1.5 power
+        
+    current_flight_fitness -= W_THETA * (theta**2) * (1 + 2.0 * height_proximity_scale) # Angle is very critical
+    current_flight_fitness -= W_VTHETA * (vtheta**2) * (1 + 1.3 * height_proximity_scale)
+
     if not legs_touching:
-        # Calculate distance to landing pad center
-        distance_to_pad = ((x ** 2) + (y ** 2)) ** 0.5
-        # Reward for being closer to the landing pad (max 50)
-        proximity_reward = 50 * max(0, 1 - (distance_to_pad / 3.0))
-        fitness += proximity_reward
+        distance_to_pad_center = (x**2 + (y * Y_PROXIMITY_WEIGHT)**2)**0.5
+        proximity_factor = max(0, 1 - distance_to_pad_center / MAX_PROXIMITY_DISTANCE_EFFECTIVE)
+        current_flight_fitness += PROXIMITY_REWARD_SCALE * (proximity_factor**3) # Cubed for steeper reward
     
-    # Add bonuses for good flight characteristics
-    if abs(vx) < 0.1:
-        fitness += 10  # Bonus for minimal horizontal velocity
-        
-    if abs(theta) < 0.05:
-        fitness += 15  # Bonus for being nearly upright
-    
-    if -0.2 < vy < 0:
-        fitness += 20  # Bonus for appropriate descent rate
-    
-    # Touching ground penalties/rewards
-    if legs_touching and not landed:
-        # Crashed but touched with legs
-        fitness -= 50  # Penalty for crashing
-        
-        # But still give some credit for almost landing
-        if abs(x) < 0.4:  # Close to the pad
-            fitness += 20
+    fitness = current_flight_fitness # Initialize final fitness with flight performance
+
+    # --- End-State Evaluation ---
+    if legs_touching:
+        if landed_successfully:
+            fitness += SUCCESS_BONUS_BASE
             
-        if abs(theta) < 0.2:  # Nearly upright
-            fitness += 15
+            precision_bonus = 0
+            precision_bonus += (SUCCESS_VX_CLEAN_FACTOR * SUCCESS_PRECISION_TOTAL_BONUS_CAP) * max(0, 1 - abs(vx) / VX_CLEAN_THRESHOLD)
+            
+            vy_success_error = vy - TARGET_IMPACT_VY
+            denominator_vy_bonus = abs(TARGET_IMPACT_VY) if TARGET_IMPACT_VY != 0 else 0.01
+            precision_bonus += (SUCCESS_VY_CLEAN_FACTOR * SUCCESS_PRECISION_TOTAL_BONUS_CAP) * max(0, 1 - abs(vy_success_error) / denominator_vy_bonus)
+            
+            precision_bonus += (SUCCESS_THETA_CLEAN_FACTOR * SUCCESS_PRECISION_TOTAL_BONUS_CAP) * max(0, 1 - abs(theta) / THETA_CLEAN_THRESHOLD_RAD)
+            fitness += precision_bonus
+        else: # Crashed
+            base_crash_score_adjustment = 0.0
+            if abs(x) <= CRASH_X_THRESHOLD_ON_PAD: base_crash_score_adjustment = CRASH_ADJ_ON_PAD
+            elif abs(x) <= CRASH_X_THRESHOLD_NEAR_PAD: base_crash_score_adjustment = CRASH_ADJ_NEAR_PAD
+            else: base_crash_score_adjustment = CRASH_ADJ_FAR_PAD
+            fitness += base_crash_score_adjustment
+            
+            # Penalties are subtracted (squared deviations from ideal impact)
+            fitness -= CRASH_X_PENALTY_FACTOR * (x**2) 
+            fitness -= CRASH_VX_PENALTY_FACTOR * (vx**2)
+            vy_impact_error = vy - TARGET_IMPACT_VY
+            fitness -= CRASH_VY_PENALTY_FACTOR * (vy_impact_error**2)
+            fitness -= CRASH_THETA_PENALTY_FACTOR * (theta**2)
+            fitness -= CRASH_VTHETA_PENALTY_FACTOR * (vtheta**2)
+    else: # Not touching ground (e.g., timed out)
+        is_centered_x = abs(x) < HOVER_X_THRESHOLD
+        is_low_enough_y = y < HOVER_Y_THRESHOLD 
+        is_stable_vx = abs(vx) < HOVER_VX_THRESHOLD
+        is_stable_vy = abs(vy - TARGET_IMPACT_VY) < HOVER_VY_ERROR_THRESHOLD
+        is_stable_theta = abs(theta) < HOVER_THETA_THRESHOLD_RAD
+        is_stable_vtheta = abs(vtheta) < HOVER_VTHETA_THRESHOLD
 
-    landing_bonus=0
-    # Major bonus for successful landing
-    if landed:
-        # Base landing bonus
-        landing_bonus = 1000
-        
-    # Additional bonus for clean landing (low velocities)
-    landing_bonus += 200 * (1 - min(1.0, (abs(vx) + abs(vy)) / 0.5))
+        if is_centered_x and is_low_enough_y and is_stable_vx and is_stable_vy and is_stable_theta and is_stable_vtheta:
+            fitness += CONTROLLED_HOVER_BONUS_BASE
+            # Additional bonus for exceptional precision in hover
+            hover_precision_score = (1 - abs(x)/HOVER_X_THRESHOLD) + \
+                                    (1 - y/HOVER_Y_THRESHOLD) + \
+                                    (1 - abs(vx)/HOVER_VX_THRESHOLD) + \
+                                    (1 - abs(vy - TARGET_IMPACT_VY)/HOVER_VY_ERROR_THRESHOLD) + \
+                                    (1 - abs(theta)/HOVER_THETA_THRESHOLD_RAD) + \
+                                    (1 - abs(vtheta)/HOVER_VTHETA_THRESHOLD)
+            # Max hover_precision_score = 6 (if all terms are 1)
+            fitness += (hover_precision_score / 6.0) * HOVER_ADDITIONAL_PRECISION_BONUS
     
-    # Additional bonus for good orientation
-    landing_bonus += 100 * (1 - min(1.0, abs(theta) / 0.2))
-        
-    fitness += landing_bonus
-    
-    return fitness, landed
-
-
+    return fitness, landed_successfully
 
 def simulate(genotype, render_mode = None, seed=None, env = None):
     #Simulates an episode of Lunar Lander, evaluating an individual
