@@ -35,8 +35,7 @@ PROB_MUTATION = 1.0/GENOTYPE_SIZE
 STD_DEV = 0.1
 
 
-ELITE_SIZE = 1
-
+ELITE_SIZE = 0
 
 def network(shape, observation,ind):
     #Computes the output of the neural network given the observation and the genotype
@@ -71,39 +70,101 @@ def check_successful_landing(observation):
     return False
 
 def objective_function(observation):
-    #TODO: Implement your own objective function
-    #Computes the quality of the individual based 
-    #on the horizontal distance to the landing pad, the vertical velocity and the angle
-    x = observation[0]
-    y = observation[1]
-    vx = observation[2]
-    vy = observation[3]
-    theta = observation[4]
-    vtheta = observation[5]
-    left_leg = observation[6]
-    right_leg = observation[7]
+    # Extract state variables
+    x = observation[0]         # Horizontal position (0 is center of landing pad)
+    y = observation[1]         # Vertical position (higher is better for altitude)
+    vx = observation[2]        # Horizontal velocity
+    vy = observation[3]        # Vertical velocity
+    theta = observation[4]     # Angle
+    vtheta = observation[5]    # Angular velocity
+    contact_left = observation[6]  # Left leg contact
+    contact_right = observation[7] # Right leg contact
+    
+    # Check landing status
+    landed = check_successful_landing(observation)
+    legs_touching = contact_left == 1 and contact_right == 1
+    
+    # Base fitness (will be negative unless landing is successful)
+    fitness = 0
+    
+    # === POSITION REWARDS/PENALTIES ===
+    # Horizontal centering - more penalty as we get farther from center
+    horizontal_penalty = abs(x) * (1 + abs(x))  # Quadratic penalty for being off-center
+    
+    # Height penalty - increases as lander gets closer to ground to encourage precision
+    height_factor = max(0.2, min(1.0, 1.0 - y/1.0)) if y > 0 else 1.0
+    
+    # === VELOCITY REWARDS/PENALTIES ===
+    # Horizontal velocity - should approach zero as we near the ground
+    vx_penalty = abs(vx) * (2.0 + height_factor * 8.0)
+    
+    # Vertical velocity - should be slow and controlled, especially near ground
+    # Allow faster descent when high, require slower descent when close to ground
+    ideal_vy = min(-0.05, -0.2 * y) if y > 0.2 else -0.05
+    vy_penalty = abs(vy - ideal_vy) * (3.0 + height_factor * 12.0)
+    
+    # === ORIENTATION REWARDS/PENALTIES ===
+    # Angle penalty - lander should be upright
+    angle_penalty = abs(theta) * (20.0 + height_factor * 30.0)
+    
+    # Angular velocity penalty - should not be spinning
+    angular_velocity_penalty = abs(vtheta) * 10.0
+    
+    # === CALCULATE FITNESS ===
+    # Apply penalties
+    fitness -= (
+        40 * horizontal_penalty +
+        70 * vx_penalty +
+        80 * vy_penalty +
+        80 * angle_penalty +
+        50 * angular_velocity_penalty
+    )
+    
+    # Distance-based reward - encourage getting closer to landing pad
+    if not legs_touching:
+        # Calculate distance to landing pad center
+        distance_to_pad = ((x ** 2) + (y ** 2)) ** 0.5
+        # Reward for being closer to the landing pad (max 50)
+        proximity_reward = 50 * max(0, 1 - (distance_to_pad / 3.0))
+        fitness += proximity_reward
+    
+    # Add bonuses for good flight characteristics
+    if abs(vx) < 0.1:
+        fitness += 10  # Bonus for minimal horizontal velocity
+        
+    if abs(theta) < 0.05:
+        fitness += 15  # Bonus for being nearly upright
+    
+    if -0.2 < vy < 0:
+        fitness += 20  # Bonus for appropriate descent rate
+    
+    # Touching ground penalties/rewards
+    if legs_touching and not landed:
+        # Crashed but touched with legs
+        fitness -= 50  # Penalty for crashing
+        
+        # But still give some credit for almost landing
+        if abs(x) < 0.4:  # Close to the pad
+            fitness += 20
+            
+        if abs(theta) < 0.2:  # Nearly upright
+            fitness += 15
 
-    # Penalizações por distância e velocidade
-    horizontal_penalty = abs(x)
-    vertical_penalty = abs(y)
-    vel_penalty = abs(vx) + abs(vy)
-    angle_penalty = abs(theta)
-    angular_velocity_penalty = abs(vtheta)
-
-
-    # Grande bónus para aterragem com sucesso
-    landing_bonus = 50 if check_successful_landing(observation) else 0
-
-    # Fitness final: minimizar penalizações e maximizar bónus
-    fitness = -(
-        2 * horizontal_penalty +
-        1 * vertical_penalty +
-        1 * vel_penalty +
-        1 * angle_penalty +
-        1 * angular_velocity_penalty
-    ) + landing_bonus
-
-    return fitness, check_successful_landing(observation)
+    landing_bonus=0
+    # Major bonus for successful landing
+    if landed:
+        # Base landing bonus
+        landing_bonus = 1000
+        
+    # Additional bonus for clean landing (low velocities)
+    landing_bonus += 200 * (1 - min(1.0, (abs(vx) + abs(vy)) / 0.5))
+    
+    # Additional bonus for good orientation
+    landing_bonus += 100 * (1 - min(1.0, abs(theta) / 0.2))
+        
+    fitness += landing_bonus
+    
+    return fitness, landed
 
 
 
@@ -278,7 +339,7 @@ if __name__ == '__main__':
     render_mode = None
     if evolve:
         seeds = [964, 952, 364, 913, 140, 726, 112, 631, 881, 844, 965, 672, 335, 611, 457, 591, 551, 538, 673, 437, 513, 893, 709, 489, 788, 709, 751, 467, 596, 976]
-        for i in range(30):    
+        for i in range(5):    
             random.seed(seeds[i])
             bests = evolution()
             with open(f'log{i}.txt', 'w') as f:
@@ -286,7 +347,7 @@ if __name__ == '__main__':
                     f.write(f'{b[1]}\t{SHAPE}\t{b[0]}\n')
     else:
         #validate individual
-        bests = load_bests('log0.txt')
+        bests = load_bests('log4.txt')
         b = bests[-1]
         SHAPE = b[1]
         ind = b[2]
